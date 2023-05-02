@@ -1,0 +1,166 @@
+1. Which continent has the most number of unicorn companies?
+
+SELECT continent,
+COUNT (DISTINCT company_id) AS total_company
+FROM unicorn_companies
+GROUP BY continent
+ORDER BY total_company DESC
+
+
+2. Which countries have the number of unicorn companies above 100?
+
+SELECT country,
+COUNT (DISTINCT company_id) AS total_company
+FROM unicorn_companies
+GROUP BY country
+HAVING COUNT (DISTINCT company_id) > 100
+ORDER BY total_company DESC
+
+
+3. Based on the total funding, which industry is the largest among unicorn companies? What is the average valuation?
+
+SELECT industry, 
+ SUM (funding) AS total_funding,
+ ROUND (AVG (valuation), 0) AS avg_valuation
+FROM unicorn_industries ui
+INNER JOIN unicorn_funding uf
+ON ui.company_id = uf.company_id
+GROUP BY industry
+ORDER BY total_funding DESC
+
+
+4. Related to task 3, how many companies join as unicorn each year (2016-2022)
+
+SELECT 
+ EXTRACT (YEAR FROM ud.date_joined) AS year_joined,
+ COUNT (DISTINCT uc.company_id) AS total_company
+FROM unicorn_companies uc
+INNER JOIN unicorn_industries ui
+ON uc.company_id = ui.company_id
+INNER JOIN unicorn_dates ud
+ON uc.company_id = ud.company_id
+AND ui.industry = 'Fintech'
+AND EXTRACT (YEAR FROM ud.date_joined) BETWEEN 2016 AND 2022
+GROUP BY 1
+ORDER BY 1 DESC
+
+
+5a. Show detailed company data (company name, city of origin, country and continent of origin) along with its industry and valuation. Where is the country of origin of the company with the largest valuation and what is the industry?
+
+SELECT company, 
+    city,
+    country,
+    continent,
+    industry,
+    valuation
+FROM unicorn_companies uc
+INNER JOIN unicorn_industries ui
+ON uc.company_id = ui.company_id
+INNER JOIN unicorn_funding uf
+ON uc.company_id = uf.company_id
+ORDER BY valuation DESC
+
+
+5b. How about indonesia? What company has the biggest valuation in Indonesia?
+
+SELECT company, 
+    city,
+    country,
+    continent,
+    industry,
+    valuation
+FROM unicorn_companies
+INNER JOIN unicorn_industries 
+ON unicorn_companies.company_id = unicorn_industries.company_id
+INNER JOIN unicorn_funding
+ON unicorn_funding.company_id = unicorn_companies.company_id
+WHERE country = 'Indonesia'
+ORDER BY valuation DESC
+
+
+6. How old was the oldest company when it merged to become a unicorn company? Where is the company from?
+
+
+SELECT company,
+    country,
+    date_joined,
+    EXTRACT (YEAR FROM date_joined)- year_founded as umur
+FROM unicorn_companies uc
+INNER JOIN unicorn_dates ud
+ON uc.company_id = ud.company_id
+ORDER BY umur DESC
+
+
+7. For companies founded between 1960 and 2000 (upper and lower bounds fall into the range), how old was the oldest company when it merged to become a unicorn company (date_joined)? Which country does the company come from?
+
+
+SELECT company,
+    country,
+    date_joined,
+    year_founded,
+EXTRACT (YEAR FROM date_joined)- year_founded as umur
+FROM unicorn_companies uc
+INNER JOIN unicorn_dates ud
+ON uc.company_id = ud.company_id
+AND year_founded BETWEEN 1960 AND 2000
+ORDER BY umur DESC
+
+
+8a. How many companies are financed by at least one investor with the name ‘venture’?
+
+
+SELECT
+ COUNT(DISTINCT company_id) AS total_company
+FROM unicorn_funding uf
+WHERE LOWER(select_investors) LIKE '%venture%'
+
+
+8b. How many companies are financed by at least one investor with the name: Venture,Capital, and Partner
+
+SELECT
+ COUNT(DISTINCT CASE WHEN LOWER(select_investors) LIKE '%venture%' THEN company_id END) AS investor_venture,
+ COUNT(DISTINCT CASE WHEN LOWER(select_investors) LIKE '%capital%' THEN company_id END) AS investor_capital,
+ COUNT(DISTINCT CASE WHEN LOWER(select_investors) LIKE '%partner%' THEN company_id END) AS investor_partner
+FROM unicorn_funding 
+
+
+9. In Indonesia there are many startups engaged in logistics services. How many logistics startups are unicorns in Asia? How many logistics startups are unicorns in Indonesia?
+
+SELECT
+ COUNT(DISTINCT uc.company_id) AS total_asia,
+ COUNT(DISTINCT CASE WHEN uc.country = 'Indonesia' THEN uc.company_id END) AS total_indonesia
+FROM unicorn_companies uc 
+INNER JOIN unicorn_industries ui 
+ ON uc.company_id = ui.company_id
+WHERE ui.industry = '"Supply chain, logistics, & delivery"' AND uc.continent = 'Asia'
+
+
+
+10. In Asia there are three countries with the highest number of unicorns. Show data on the number of unicorns in each industry and country of origin in Asia, with the exception of these three countries. Sort by industry, number of companies (decreasing), and country of origin.
+
+WITH top_3 AS (
+SELECT
+ uc.country,
+ COUNT(DISTINCT uc.company_id) AS total_company
+FROM unicorn_companies uc 
+WHERE uc.continent = 'Asia'
+GROUP BY 1
+ORDER BY 2 DESC
+LIMIT 3
+)
+
+SELECT
+ ui.industry,
+ uc.country,
+ COUNT(DISTINCT uc.company_id) AS total_company
+FROM unicorn_companies uc
+INNER JOIN unicorn_industries ui
+ ON uc.company_id = ui.company_id 
+WHERE uc.continent = 'Asia'
+AND uc.country NOT IN (
+ SELECT
+  DISTINCT country
+ FROM top_3
+)
+GROUP BY 1,2
+ORDER BY 1,3 DESC,2
