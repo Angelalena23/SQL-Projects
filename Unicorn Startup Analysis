@@ -1,3 +1,5 @@
+This project is provided by MySkill with the following questions
+
 1. Which continent has the most number of unicorn companies?
 
 SELECT continent,
