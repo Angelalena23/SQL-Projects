@@ -1,4 +1,8 @@
-This project is provided by MySkill with the following questions
+This project is provided by MySkill and is done in postgresgql with the following dataset (the dataset is attached outside)
+-unicorn companies
+-unicorn dates 
+-unicorn funding 
+-unicorn industries
 
 1. Which continent has the most number of unicorn companies?
 
