@@ -1,3 +1,5 @@
+This project provided by RevoU 
+
 --To understand which categories is the best sellers amongs all, Please find the categories that generate the most sales price with status shipped on Dec 2022?--
 
 SELECT p.category,
